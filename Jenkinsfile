@@ -2,6 +2,10 @@ pipeline {
 
     agent any
 
+      tools {
+        maven 'maven3'  // Name of the Maven tool configured in Jenkins
+    }
+
     environment {
         registry = "satya263/vproappdock"
         registryCredential = 'dockerhub'
