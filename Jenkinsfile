@@ -1,19 +1,14 @@
 pipeline {
 
     agent any
-/*
-	tools {
-        maven "maven3"
-    }
-*/
+
     environment {
         registry = "satya263/vproappdock"
         registryCredential = 'dockerhub'
-
     }
 
-    stages{
-        stage('BUILD'){
+    stages {
+        stage('BUILD') {
             steps {
                 sh 'mvn clean install -DskipTests'
             }
@@ -25,19 +20,19 @@ pipeline {
             }
         }
 
-        stage('UNIT TEST'){
+        stage('UNIT TEST') {
             steps {
                 sh 'mvn test'
             }
         }
 
-        stage('INTEGRATION TEST'){
+        stage('INTEGRATION TEST') {
             steps {
                 sh 'mvn verify -DskipUnitTests'
             }
         }
 
-        stage ('CODE ANALYSIS WITH CHECKSTYLE'){
+        stage('CODE ANALYSIS WITH CHECKSTYLE') {
             steps {
                 sh 'mvn checkstyle:checkstyle'
             }
@@ -72,7 +67,7 @@ pipeline {
             }
         }
 
-        stage{'Build App Image'} {
+        stage('Build App Image') {  // Corrected syntax
             steps {
                 script {
                     dockerImage = docker.build registry + ":V$BUILD_NUMBER"
@@ -81,28 +76,28 @@ pipeline {
         }
 
         stage('Upload Image') {
-            steps{
+            steps {
                 script {
                     docker.withRegistry('', registryCredential) {
                         dockerImage.push("$BUILD_NUMBER")
                         dockerImage.push('latest')
-
                     }
                 }
             }
         }
 
-        stage('Remove Unused docker image') {
-            steps{
+        stage('Remove Unused Docker Image') {
+            steps {
                 sh "docker rmi $registry:V$BUILD_NUMBER"
             }
         }
 
-        stage('Kubernetes Deploy')
-          agent {label 'KOPS'}
+        stage('Kubernetes Deploy') {  // Corrected syntax and agent placement
+            agent { label 'KOPS' }
             steps {
                 sh "helm upgrade --install --force vprofile-stack helm/vprofilecharts --set appimage=${registry}:V${BUILD_NUMBER} --namespace prod"
             }
-    }
+        }
 
+    }
 }
